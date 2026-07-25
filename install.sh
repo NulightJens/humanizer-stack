@@ -25,6 +25,11 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+IS_WINDOWS=0
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*) IS_WINDOWS=1 ;;
+esac
+
 mkdir -p "$TARGET"
 echo "installing into $TARGET (mode: $MODE)"
 
@@ -44,13 +49,24 @@ for skill in "${SKILLS[@]}"; do
   fi
 
   if [[ "$MODE" == link ]]; then
-    if ln -s "$src" "$dst" 2>/dev/null; then
+    if [[ "$IS_WINDOWS" -eq 1 ]]; then
+      # Git Bash silently turns `ln -s` into a deep copy unless MSYS is
+      # configured for native symlinks, which breaks `git pull` updates
+      # without saying so. A directory junction is the reliable equivalent
+      # and needs no elevation.
+      win_src="$(cygpath -w "$src")"
+      win_dst="$(cygpath -w "$dst")"
+      if cmd //c mklink //J "$win_dst" "$win_src" > /dev/null 2>&1; then
+        echo "  junctioned $skill"
+      else
+        cp -R "$src" "$dst"
+        echo "  copied $skill (junction refused; re-run install.sh after a git pull)"
+      fi
+    elif ln -s "$src" "$dst" 2>/dev/null; then
       echo "  linked $skill"
     else
-      # Windows/Git Bash without symlink privileges, or a filesystem that
-      # refuses them: fall back to a copy rather than installing nothing.
       cp -R "$src" "$dst"
-      echo "  copied $skill (symlink not permitted here; re-run after a git pull)"
+      echo "  copied $skill (symlink refused; re-run install.sh after a git pull)"
     fi
   else
     cp -R "$src" "$dst"
