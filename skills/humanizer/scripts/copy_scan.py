@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """copy_scan.py - deterministic scan for surface copy tells in prose.
 
-Ported from devibe_scan.py in jcarterjohnson/vibecoded-design-tells (MIT),
-narrowed to the four mechanical copy rules and adapted for prose files
-(markdown, plain text, HTML) rather than web source.
+Ported from devibe_scan.py in jcarterjohnson/vibecoded-design-tells,
+Copyright (c) 2026 Carter Johnson, MIT License. Narrowed to the four
+mechanical copy rules and adapted for prose files (markdown, plain text,
+HTML) rather than web source.
 
 Catches the pattern-matchable slice of the surface layer:
 
-  copy-em-dash      em dash in visible copy (the #1 cited writing tell, 7.1%)
+  copy-em-dash      em dash in visible copy (most-cited writing tell, 7.1%)
   copy-antithesis   "it's not just X, it's Y" / "not only X but Y" (2.8%)
   hype-copy         marketing cliche vocabulary
   copy-servile      sycophantic openers and signposted wrap-ups
@@ -22,6 +23,10 @@ Usage:
   python3 copy_scan.py --json draft.md        # machine-readable output
   python3 copy_scan.py --strict draft.md      # exit 1 on any hit (hook-friendly)
 
+Prose in headings, blockquotes, bullets, and tables IS user-facing copy and is
+scanned. Fenced code blocks, indented code blocks, inline code spans, and
+comment lines are not copy and are skipped.
+
 Mark a line with `copy-ignore` to suppress it (intentional usage).
 """
 
@@ -34,11 +39,13 @@ import sys
 RULES = [
     {
         "id": "copy-em-dash",
-        "label": "Em dash in copy (the #1 'AI wrote this' writing tell)",
+        "label": "Em/en dash in copy (the most-cited 'AI wrote this' writing tell)",
         "fix": "Use a comma, a period, or parentheses. Not a colon; that gets flagged too.",
-        "pats": [r"\w\s*—\s*\w", r"\w\s*&mdash;\s*\w"],
-        # Skip code, code comments, and fenced blocks: not user-facing copy.
-        "suppress": r"^\s*(\*|//|/\*|<!--|#|>|\||```)|`[^`]*—[^`]*`",
+        "pats": [r"\w\s*—\s*\w", r"\w\s*&mdash;\s*\w", r"\w\s*–\s*\w"],
+        # Code comments are not copy. Markdown headings, blockquotes, bullets,
+        # and tables ARE copy, so they stay in scope (fenced/inline code and
+        # indented code blocks are stripped for every rule before matching).
+        "suppress": r"^\s*(//|/\*|<!--)",
     },
     {
         "id": "copy-antithesis",
@@ -94,17 +101,45 @@ def strip_html(text):
     return html_mod.unescape(TAG_RE.sub(" ", text))
 
 
+FENCE_RE = re.compile(r"^\s*(```|~~~)")
+INLINE_CODE_RE = re.compile(r"`[^`]*`")
+
+
+def blank_inline_code(line):
+    """Replace inline code spans with spaces, preserving match offsets."""
+    return INLINE_CODE_RE.sub(lambda m: " " * len(m.group(0)), line)
+
+
 def scan(text, rules, path):
     hits = []
+    in_fence = False
+    prev_blank = True
+    in_indent_code = False
     for lineno, line in enumerate(text.splitlines(), 1):
-        if "copy-ignore" in line:
+        blank = not line.strip()
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            prev_blank, in_indent_code = False, False
             continue
+        if in_fence:
+            continue
+        # Indented code block: 4+ spaces, opened after a blank line. An indented
+        # line inside a list is a continuation, not code, so it stays in scope.
+        indented = line.startswith(("    ", "\t")) and not blank
+        in_indent_code = indented and (in_indent_code or prev_blank)
+        prev_blank = blank
+        if in_indent_code or blank or "copy-ignore" in line:
+            continue
+        scannable = blank_inline_code(line)
         for rule in rules:
-            if rule["suppress_re"] and rule["suppress_re"].search(line):
+            if rule["suppress_re"] and rule["suppress_re"].search(scannable):
                 continue
+            claimed = []
             for pat in rule["re"]:
-                m = pat.search(line)
-                if m:
+                for m in pat.finditer(scannable):
+                    if any(m.start() < e and m.end() > s for s, e in claimed):
+                        continue
+                    claimed.append((m.start(), m.end()))
                     hits.append({
                         "file": path,
                         "line": lineno,
@@ -114,7 +149,6 @@ def scan(text, rules, path):
                         "match": m.group(0).strip()[:80],
                         "text": line.strip()[:120],
                     })
-                    break
     return hits
 
 

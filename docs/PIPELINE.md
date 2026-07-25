@@ -7,7 +7,7 @@ draft
   |
   v
 [ pass 1: humanizer ]          words, phrasing, punctuation, copy tells
-  |                            scanner: scripts/copy_scan.py
+  |                            scanner: skills/humanizer/scripts/copy_scan.py
   v
 [ pass 2: structural-humanizer ]  discourse shape, arc, emotion mode, reference
   |                               scanner: skills/structural-humanizer/scripts/structural_scan.py
@@ -71,13 +71,21 @@ Worth knowing what drafted the text, because each model converges differently.
 
 ## Hooking the scanners
 
-Both scanners support `--strict`, which exits 1 on any hit. That makes them usable as a
-pre-commit or pre-publish gate:
+Both scanners support `--strict`, but they mean different things by it. `copy_scan.py`
+exits 1 on any hit. `structural_scan.py` exits 1 only when a category reaches its
+threshold (2 hits per document for embodied emotion, stated lesson, tidy closer, or
+vague allusion), because a single embodied-emotion line is a choice and four are a habit.
+Its paragraph-uniformity and number-density metrics are informational and never affect
+the exit code.
 
 ```bash
-python3 scripts/copy_scan.py --strict content/**/*.md \
+python3 skills/humanizer/scripts/copy_scan.py --strict content/**/*.md \
   && python3 skills/structural-humanizer/scripts/structural_scan.py --strict content/**/*.md
 ```
+
+Installed rather than cloned? The scanners ship inside their skills, so use
+`~/.claude/skills/humanizer/scripts/copy_scan.py` and
+`~/.claude/skills/structural-humanizer/scripts/structural_scan.py`.
 
 Use this as a gate on outward-facing content only. Applied to internal docs it will fire
 constantly on text that nobody needs to be human.

@@ -25,6 +25,11 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+IS_WINDOWS=0
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*) IS_WINDOWS=1 ;;
+esac
+
 mkdir -p "$TARGET"
 echo "installing into $TARGET (mode: $MODE)"
 
@@ -44,15 +49,32 @@ for skill in "${SKILLS[@]}"; do
   fi
 
   if [[ "$MODE" == link ]]; then
-    ln -s "$src" "$dst"
-    echo "  linked $skill"
+    if [[ "$IS_WINDOWS" -eq 1 ]]; then
+      # Git Bash silently turns `ln -s` into a deep copy unless MSYS is
+      # configured for native symlinks, which breaks `git pull` updates
+      # without saying so. A directory junction is the reliable equivalent
+      # and needs no elevation.
+      win_src="$(cygpath -w "$src")"
+      win_dst="$(cygpath -w "$dst")"
+      if cmd //c mklink //J "$win_dst" "$win_src" > /dev/null 2>&1; then
+        echo "  junctioned $skill"
+      else
+        cp -R "$src" "$dst"
+        echo "  copied $skill (junction refused; re-run install.sh after a git pull)"
+      fi
+    elif ln -s "$src" "$dst" 2>/dev/null; then
+      echo "  linked $skill"
+    else
+      cp -R "$src" "$dst"
+      echo "  copied $skill (symlink refused; re-run install.sh after a git pull)"
+    fi
   else
     cp -R "$src" "$dst"
     echo "  copied $skill"
   fi
 done
 
-chmod +x "$REPO/scripts/copy_scan.py" \
+chmod +x "$REPO/skills/humanizer/scripts/copy_scan.py" \
          "$REPO/skills/structural-humanizer/scripts/structural_scan.py" 2>/dev/null || true
 
 cat <<EOF
@@ -61,6 +83,6 @@ done. verify with:
   ls -la $TARGET | grep -E 'humanizer'
 
 run the scanners:
-  python3 $REPO/scripts/copy_scan.py <file>
+  python3 $REPO/skills/humanizer/scripts/copy_scan.py <file>
   python3 $REPO/skills/structural-humanizer/scripts/structural_scan.py <file>
 EOF

@@ -103,9 +103,9 @@ def strip_html(text):
     return html_mod.unescape(text)
 
 
-def find_hits(lines, patterns):
+def find_hits(numbered_lines, patterns):
     hits = []
-    for lineno, line in enumerate(lines, 1):
+    for lineno, line in numbered_lines:
         claimed = []  # spans already matched on this line, to dedup overlapping patterns
         for pat in patterns:
             for m in re.finditer(pat, line, re.IGNORECASE):
@@ -124,25 +124,36 @@ def paragraphs_of(text):
     return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
+def paragraph_blocks(lines):
+    """Group lines into paragraphs, keeping each line's real 1-based number."""
+    blocks, current = [], []
+    for lineno, line in enumerate(lines, 1):
+        if line.strip():
+            current.append((lineno, line))
+        elif current:
+            blocks.append(current)
+            current = []
+    if current:
+        blocks.append(current)
+    return blocks
+
+
 def scan(text):
     lines = text.splitlines()
     paras = paragraphs_of(text)
     words = re.findall(r"[A-Za-z']+", text)
     n_words = len(words) or 1
 
+    numbered = list(enumerate(lines, 1))
     result = {
-        "embodied_emotion": find_hits(lines, EMBODIED_EMOTION),
-        "stated_lesson": find_hits(lines, STATED_LESSON),
-        "vague_allusion": find_hits(lines, VAGUE_ALLUSION),
+        "embodied_emotion": find_hits(numbered, EMBODIED_EMOTION),
+        "stated_lesson": find_hits(numbered, STATED_LESSON),
+        "vague_allusion": find_hits(numbered, VAGUE_ALLUSION),
     }
 
     # tidy closers only matter near the end: scan the final two paragraphs
-    tail = "\n".join(paras[-2:]) if paras else ""
-    tail_offset = len(lines) - len(tail.splitlines())
-    tail_hits = find_hits(tail.splitlines(), TIDY_CLOSER)
-    for h in tail_hits:
-        h["line"] += max(tail_offset, 0)
-    result["tidy_closer"] = tail_hits
+    tail = [ln for block in paragraph_blocks(lines)[-2:] for ln in block]
+    result["tidy_closer"] = find_hits(tail, TIDY_CLOSER)
 
     # ---- metrics (informational; not counted by --strict) ----
     metrics = {}
