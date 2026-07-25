@@ -12,21 +12,11 @@ notices themselves are reproduced here rather than only linked:
 ```
 Copyright (c) 2025 Siqi Chen (blader/humanizer)
 Copyright (c) 2026 Carter Johnson (jcarterjohnson/vibecoded-design-tells)
-Copyright (c) 2026 Jens Heitmann (NulightJens/humanizer-stack)
 ```
 
 Each is MIT-licensed; the full text is in [LICENSE](LICENSE), which is the same
 MIT text those projects use. `skills/humanizer/scripts/copy_scan.py` also carries
 its upstream notice in its own docstring.
-
-## Fork note
-
-This repository is a fork of
-[NulightJens/humanizer-stack](https://github.com/NulightJens/humanizer-stack) (MIT).
-The two-pass design, the `structural-humanizer` skill, `storyscope-findings.md`, and
-`genre-calibration.md` are that project's work. This fork rebased pass 1 onto blader
-2.9.1, relocated `copy_scan.py` into the humanizer skill, fixed scanner defects, and
-added tests. See [CHANGES.md](CHANGES.md).
 
 ## Summary
 
@@ -36,7 +26,7 @@ added tests. See [CHANGES.md](CHANGES.md).
 | ...its underlying pattern catalog | [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) | CC BY-SA 4.0 | Attribute and share alike |
 | `skills/humanizer/references/copy-tells.md` | [jcarterjohnson/vibecoded-design-tells](https://github.com/jcarterjohnson/vibecoded-design-tells) | MIT | Keep copyright and license notice |
 | `skills/humanizer/scripts/copy_scan.py` | same as above (`devibe_scan.py`) | MIT | Keep copyright and license notice |
-| `skills/structural-humanizer/**` | [NulightJens/humanizer-stack](https://github.com/NulightJens/humanizer-stack) | MIT | Keep copyright and license notice; cite the paper below |
+| `skills/structural-humanizer/**` | original work, this repo | MIT | Cite the paper below if you build on it |
 | StoryScope findings | Russell et al. 2026, arXiv:2604.03136 | academic citation | Cite, do not relicense |
 
 ## 1. humanizer (MIT, plus CC BY-SA upstream)
@@ -81,8 +71,7 @@ are included.
 
 ## 3. structural-humanizer (original work)
 
-`skills/structural-humanizer/**` is original work from the upstream repository
-(NulightJens/humanizer-stack, MIT), modified here as recorded in CHANGES.md.
+`skills/structural-humanizer/**` is original work written for this repository.
 It is grounded in, but does not reproduce, the following paper:
 
 > Russell, J., Rajendhran, S., Pham, N., Iyyer, M., and Wieting, J. (2026).

@@ -104,7 +104,7 @@ across pieces, and be able to say why this piece got this shape.
 ## Install
 
 ```bash
-git clone https://github.com/adevra/humanizer-stack.git
+git clone https://github.com/NulightJens/humanizer-stack.git
 cd humanizer-stack
 ./install.sh
 ```
@@ -172,12 +172,6 @@ Run `tests/run_tests.sh` after editing a rule; it asserts the fixture hit counts
   signature. That is what the data says, and it is worth sitting with before applying.
 
 ## Attribution
-
-This is a fork of [NulightJens/humanizer-stack](https://github.com/NulightJens/humanizer-stack)
-(MIT, Jens Heitmann), which is where the two-pass design and the structural skill come
-from. This fork rebases pass 1 onto blader 2.9.1, moves `copy_scan.py` inside the
-humanizer skill so it survives installation, fixes the scanner defects listed in
-[CHANGES.md](CHANGES.md), and adds a test suite.
 
 Built on work by [@blader](https://github.com/blader/humanizer) (MIT),
 [jcarterjohnson](https://github.com/jcarterjohnson/vibecoded-design-tells) (MIT), and
