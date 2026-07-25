@@ -4,6 +4,30 @@ This repository packages material from several upstream sources. Each is listed
 below with its license and what was taken. If you redistribute this work, these
 obligations travel with it.
 
+## Required copyright notices
+
+The MIT License requires the copyright notice to travel with the code, so the
+notices themselves are reproduced here rather than only linked:
+
+```
+Copyright (c) 2025 Siqi Chen (blader/humanizer)
+Copyright (c) 2026 Carter Johnson (jcarterjohnson/vibecoded-design-tells)
+Copyright (c) 2026 Jens Heitmann (NulightJens/humanizer-stack)
+```
+
+Each is MIT-licensed; the full text is in [LICENSE](LICENSE), which is the same
+MIT text those projects use. `skills/humanizer/scripts/copy_scan.py` also carries
+its upstream notice in its own docstring.
+
+## Fork note
+
+This repository is a fork of
+[NulightJens/humanizer-stack](https://github.com/NulightJens/humanizer-stack) (MIT).
+The two-pass design, the `structural-humanizer` skill, `storyscope-findings.md`, and
+`genre-calibration.md` are that project's work. This fork rebased pass 1 onto blader
+2.9.1, relocated `copy_scan.py` into the humanizer skill, fixed scanner defects, and
+added tests. See [CHANGES.md](CHANGES.md).
+
 ## Summary
 
 | Component | Upstream | License | Obligation |
@@ -11,14 +35,17 @@ obligations travel with it.
 | `skills/humanizer/SKILL.md` | [blader/humanizer](https://github.com/blader/humanizer) | MIT | Keep copyright and license notice |
 | ...its underlying pattern catalog | [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) | CC BY-SA 4.0 | Attribute and share alike |
 | `skills/humanizer/references/copy-tells.md` | [jcarterjohnson/vibecoded-design-tells](https://github.com/jcarterjohnson/vibecoded-design-tells) | MIT | Keep copyright and license notice |
-| `scripts/copy_scan.py` | same as above (`devibe_scan.py`) | MIT | Keep copyright and license notice |
-| `skills/structural-humanizer/**` | original work, this repo | MIT | Cite the paper below if you build on it |
+| `skills/humanizer/scripts/copy_scan.py` | same as above (`devibe_scan.py`) | MIT | Keep copyright and license notice |
+| `skills/structural-humanizer/**` | [NulightJens/humanizer-stack](https://github.com/NulightJens/humanizer-stack) | MIT | Keep copyright and license notice; cite the paper below |
 | StoryScope findings | Russell et al. 2026, arXiv:2604.03136 | academic citation | Cite, do not relicense |
 
 ## 1. humanizer (MIT, plus CC BY-SA upstream)
 
 `skills/humanizer/SKILL.md` originates from the `humanizer` skill by
 [@blader](https://github.com/blader/humanizer), released under the MIT License.
+It tracks upstream **2.9.1** (the frontmatter records the version it was rebased
+from). Local additions: the pass-1-of-2 scope note, the plain-emotion paragraph in
+PERSONALITY AND SOUL, the public-facing-copy section, and the pipeline handoff.
 
 That skill is in turn built from
 [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing),
@@ -42,7 +69,7 @@ get your own legal read first. The rest of this repository is unaffected.
 [jcarterjohnson/vibecoded-design-tells](https://github.com/jcarterjohnson/vibecoded-design-tells)
 (MIT).
 
-`scripts/copy_scan.py` is a port of the four copy rules (`copy-em-dash`,
+`skills/humanizer/scripts/copy_scan.py` is a port of the four copy rules (`copy-em-dash`,
 `copy-antithesis`, `hype-copy`, `copy-servile`) from that repo's `devibe_scan.py`,
 narrowed to prose files and given a standalone CLI.
 
@@ -54,7 +81,8 @@ are included.
 
 ## 3. structural-humanizer (original work)
 
-`skills/structural-humanizer/**` is original work written for this repository.
+`skills/structural-humanizer/**` is original work from the upstream repository
+(NulightJens/humanizer-stack, MIT), modified here as recorded in CHANGES.md.
 It is grounded in, but does not reproduce, the following paper:
 
 > Russell, J., Rajendhran, S., Pham, N., Iyyer, M., and Wieting, J. (2026).

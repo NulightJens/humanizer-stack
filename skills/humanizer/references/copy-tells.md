@@ -13,12 +13,20 @@ complaint posts.
 
 ## The mechanical four (a scanner can catch these)
 
-Run `python3 scripts/copy_scan.py <file>` to flag them.
+Run `scripts/copy_scan.py` (inside this skill) to flag them:
+`python3 ~/.claude/skills/humanizer/scripts/copy_scan.py <file>`.
 
-### 1. The em dash (7.1%, the single most-cited writing tell)
+### 1. The em dash (7.1%, the most-cited writing tell)
 
-On visible copy the em dash reads as "a machine wrote this." It is the highest-signal
-writing tell in the entire dataset, above any vocabulary word.
+On visible copy the em dash reads as "a machine wrote this." It ranks above every
+vocabulary word in the dataset.
+
+**Caveat from the source itself.** Four of that project's five auditors independently
+confirmed the em dash as the most-cited tell in their chunks; the fifth argued the count
+is inflated because most em-dash occurrences were the poster's own incidental
+punctuation rather than a complaint about em dashes. The upstream synthesis kept it at #1
+and flagged the tension. Treat it as a strong signal, not a settled ranking, and note
+that the en dash rides along with it (§14 of `SKILL.md` bans both).
 
 **Fix:** use a comma, a period, or parentheses. Do not simply substitute a colon,
 because readers flag that too as the same reflex wearing a different hat.

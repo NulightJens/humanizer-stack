@@ -22,11 +22,16 @@ Then the authors ran AI text through LAMP, a professional span-level rewriting s
 that strips cliche, purple prose, and redundant exposition. Functionally, a very good
 surface humanizer.
 
-Detection dropped **1.6 points**.
+Detection dropped **1.6 points** (95.5% to 93.9% macro-F1). Scope of that test: 278
+Gemini stories, with Gemini itself as the rewriter.
 
-Meanwhile the surface layer is eroding on its own. GPT 5.4 already cut its em-dash
-usage sharply, and fine-tuning drops stylistic detection from 97% to 3%. Word-level
-tells are a moving target. Structural tells require structural rewrites.
+Read the claim precisely. Style is not a *weak* signal in that paper: style-only
+features score 85.8% macro-F1 and text-based baselines separate human from AI at
+99.8-99.9%. The point is durability. Style is the layer that a rewrite, a fine-tune, or
+a model update can move, and it is already moving: GPT 5.4 cut its em-dash usage
+sharply, and fine-tuning to mimic human style drops stylistic detection from 97% to 3%
+(Chakrabarty et al. 2026). Structure is the layer that survives a surface rewrite, so
+removing it takes a structural rewrite.
 
 So: pass 1 fixes the words. Pass 2 fixes the shape. Run them in that order.
 
@@ -37,24 +42,34 @@ skills/
   humanizer/                     Pass 1: words and phrasing
     SKILL.md
     references/copy-tells.md     Copy-specific tells (em dash, hype vocab, antithesis)
+    scripts/copy_scan.py         Deterministic scanner for mechanical copy tells
   structural-humanizer/          Pass 2: discourse structure
     SKILL.md
     references/
       storyscope-findings.md     The study distilled: 30 core features with rates
       genre-calibration.md       Which audits apply per genre
     scripts/structural_scan.py   Deterministic scanner for grep-able structural tells
-scripts/
-  copy_scan.py                   Deterministic scanner for mechanical copy tells
 docs/
   PIPELINE.md                    How the passes chain, and what each one owns
+tests/
+  run_tests.sh                   Fixture assertions for both scanners
 ```
+
+Each scanner lives inside the skill that calls it, so both keep working after
+`install.sh` puts the skills in `~/.claude/skills/`.
 
 ### Pass 1: `humanizer`
 
-Vocabulary, punctuation, and phrasing. Inflated symbolism, promotional language,
-superficial "-ing" analyses, vague attributions, em dash overuse, rule of three, AI
-vocabulary, negative parallelism. Built from Wikipedia's
+Vocabulary, punctuation, and phrasing: 33 patterns covering inflated symbolism,
+promotional language, superficial "-ing" analyses, vague attributions, em and en dashes,
+rule of three, AI vocabulary, negative parallelism, aphorism formulas, manufactured
+punchlines, and more. Tracks [@blader/humanizer](https://github.com/blader/humanizer)
+2.9.1, which is built from Wikipedia's
 [Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing).
+Two of its guardrails matter more than any pattern list: **never invent facts** (a
+fabricated specific is a defect even when it reads more human than the vague original)
+and **voice calibration** (a user-supplied writing sample outranks the style rules,
+including the em-dash ban).
 
 The `copy-tells.md` reference adds the tells that show up specifically in public copy,
 ranked by a 3.2M-post Reddit analysis of what people actually flag.
@@ -89,7 +104,7 @@ across pieces, and be able to say why this piece got this shape.
 ## Install
 
 ```bash
-git clone https://github.com/NulightJens/humanizer-stack.git
+git clone https://github.com/adevra/humanizer-stack.git
 cd humanizer-stack
 ./install.sh
 ```
@@ -119,15 +134,23 @@ Both scanners are deterministic and hook-friendly. They catch the pattern-matcha
 slice only, and neither replaces the judgment work in the skills.
 
 ```bash
-python3 scripts/copy_scan.py draft.md
+python3 skills/humanizer/scripts/copy_scan.py draft.md
 python3 skills/structural-humanizer/scripts/structural_scan.py draft.md
 
-python3 scripts/copy_scan.py --json draft.md      # machine-readable
-python3 scripts/copy_scan.py --strict draft.md    # exit 1 on any hit
-cat draft.md | python3 scripts/copy_scan.py -     # stdin
+python3 skills/humanizer/scripts/copy_scan.py --json draft.md    # machine-readable
+python3 skills/humanizer/scripts/copy_scan.py --strict draft.md  # exit 1 on any hit
+cat draft.md | python3 skills/humanizer/scripts/copy_scan.py -   # stdin
 ```
 
-Mark a line `copy-ignore` to suppress an intentional usage.
+`copy_scan.py --strict` exits 1 on any hit. `structural_scan.py --strict` exits 1 only
+once a category reaches its threshold (2 hits per document), because one embodied-emotion
+line is a choice and four are a habit.
+
+Mark a line `copy-ignore` to suppress an intentional usage. Fenced code blocks, indented
+code blocks, inline code spans, and comment lines are skipped automatically; headings,
+blockquotes, bullets, and table cells are treated as copy and scanned.
+
+Run `tests/run_tests.sh` after editing a rule; it asserts the fixture hit counts.
 
 ## Honest limits
 
@@ -139,10 +162,22 @@ Mark a line `copy-ignore` to suppress an intentional usage.
   a person did.
 - **The scanners catch maybe half.** Cadence, formulaic shape, and polished-but-empty
   filler are only visible to a human reader.
+- **The em dash ranking is contested in its own source.** It is the most-cited tell in
+  the Reddit corpus (7.1%), but one of that project's five auditors argued the count is
+  inflated by incidental punctuation rather than actual complaints. Treat it as a strong
+  signal, not a proven #1.
+- **Nothing here is a detector.** The scanners flag surface patterns and the audits are
+  editorial judgment. Do not read a clean scan as "this will pass an AI checker."
 - **Audit 3 contradicts standard writing advice.** "Show, don't tell" is now a machine
   signature. That is what the data says, and it is worth sitting with before applying.
 
 ## Attribution
+
+This is a fork of [NulightJens/humanizer-stack](https://github.com/NulightJens/humanizer-stack)
+(MIT, Jens Heitmann), which is where the two-pass design and the structural skill come
+from. This fork rebases pass 1 onto blader 2.9.1, moves `copy_scan.py` inside the
+humanizer skill so it survives installation, fixes the scanner defects listed in
+[CHANGES.md](CHANGES.md), and adds a test suite.
 
 Built on work by [@blader](https://github.com/blader/humanizer) (MIT),
 [jcarterjohnson](https://github.com/jcarterjohnson/vibecoded-design-tells) (MIT), and
