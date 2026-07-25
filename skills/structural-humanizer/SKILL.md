@@ -99,8 +99,12 @@ break the pattern before publishing.
    from the last piece.
 4. **Rewrite structurally.** Move sections, cut codas, delete restatements. Do not
    just polish sentences; that is the other skill's job.
-5. **Scan:** `python3 scripts/structural_scan.py <file>` catches the pattern-matchable
-   slice (embodied-emotion cliches, takeaway markers, vague allusions, uniformity).
+5. **Scan:** run `scripts/structural_scan.py`, which ships inside this skill; resolve
+   the path against this SKILL.md's own directory
+   (`~/.claude/skills/structural-humanizer/scripts/structural_scan.py` for a user-level
+   install, `.claude/skills/...` for a project-level one). It catches the
+   pattern-matchable slice (embodied-emotion cliches, takeaway markers, vague
+   allusions, uniformity), not the judgment-level audits.
 6. **Re-check for the trap.** If the fix looks like the fix you applied yesterday,
    vary it.
 
